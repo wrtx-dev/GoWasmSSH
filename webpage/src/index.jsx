@@ -23,6 +23,7 @@ export function App() {
 	const [msg, setMsg] = useState(null);
 	const confirmRef = useRef(null);
 	const [confirmInfo, setConfirmInfo] = useState(null);
+	const [connecedSftp, setConnectedSftp] = useState(false);
 
 	const sftpItemClick = (file) => {
 		if (file.isDir && sftpRef && sftpRef.current) {
@@ -59,6 +60,8 @@ export function App() {
 		const keyFile = formData.get('key');
 		const passphrase = formData.get('Passphrase');
 		const finger = formData.get("finger");
+		const createSftp = formData.get("usesftp");
+
 
 		dialogRef.current.close();
 		// @ts-ignore
@@ -76,7 +79,17 @@ export function App() {
 			confirmRef.current.showModal();
 		}, (flag) => {
 			setConnected(flag);
+			if (createSftp) {
+				setConnectedSftp(flag);
+			}
+			if (!flag) {
+				clientRef.current = null;
+				sftpRef.current = null;
+			}
 		});
+		if (createSftp) {
+			client.createSftClient();
+		}
 		if (term && term.current) {
 			term.current.onData((data) => {
 				client.sessionInput(data);
@@ -171,7 +184,7 @@ export function App() {
 					}
 					<button
 						className={"btn btn-soft btn-info btn-square"}
-						disabled={!connected}
+						disabled={!connected || !connecedSftp}
 						onClick={() => {
 							if (sftpRef && sftpRef.current) {
 								sftpDialogRef.current.showModal();
@@ -268,7 +281,7 @@ export function App() {
 
 							{/*Passphrase*/}
 							<div className={"col-span-1 join rounded-sm gap-0.5 input border-black focus-within:border-black focus-within:outline-0 focus-within:ring-0 items-center w-full"}>
-								<label className={"label join-item"}>密码</label>
+								<label className={"label join-item"}>密钥口令</label>
 								<input
 									type="password"
 									className={"input join-item border-none focus-within:border-none focus-within:outline-0 focus-within:ring-0 px-1"}
@@ -279,9 +292,13 @@ export function App() {
 
 						</div>
 						<div className={"grid grid-cols-2 gap-1 items-center"}>
-							<div className={"col-span-1  rounded-sm border-black"}>
+							<div className={"col-span-1  rounded-sm border-black inline-flex flex-row items-center justify-start gap-2"}>
 								<input type='checkbox' className={"checkbox "} defaultChecked name="finger" />
 								<label className={"label "}>显示ssh指纹信息</label>
+							</div>
+							<div className={"col-span-1  rounded-sm border-black inline-flex flex-row items-center justify-start gap-2"}>
+								<input type='checkbox' className={"checkbox "} name="usesftp" />
+								<label className={"label "}>创建sftp连接</label>
 							</div>
 						</div>
 

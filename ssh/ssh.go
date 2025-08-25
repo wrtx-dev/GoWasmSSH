@@ -22,7 +22,6 @@ type SSHClient struct {
 	conn            net.Conn
 	host            string
 	port            int
-	onData          js.JsValue
 	term            js.JsValue
 	user            string
 	password        string
@@ -38,6 +37,7 @@ type SSHClient struct {
 	client          *ssh.Client
 	sessionInput    js.JsValue
 	sftp            *sftp.Client
+	cretaeSftp      bool
 }
 
 func (c *SSHClient) close() {
@@ -49,10 +49,8 @@ func (c *SSHClient) close() {
 		c.client = nil
 		c.conn = nil
 		c.session = nil
-		if !c.onData.IsUndefined() {
-			c.onData.Call("dispose")
-		}
-		c.onData = js.Global().Get("undefined")
+		c.sessionInput = js.Global().Get("undefined")
+		c.sftp = nil
 	}
 	if !c.statusCallBack.IsUndefined() {
 		c.statusCallBack.Invoke(false)
@@ -227,9 +225,6 @@ func (c *SSHClient) jsSSHFunc(_ js.JsValue, args []js.JsValue) interface{} {
 		if c.session != nil {
 			c.close()
 		}
-		if !c.onData.IsUndefined() {
-			c.onData.Call("dispose")
-		}
 
 		if err := c.connectTo(); err != nil {
 			c.errorMsg(fmt.Sprintf("connect to host %s err: %v", c.host, err))
@@ -377,9 +372,11 @@ func (c *SSHClient) jsSSHFunc(_ js.JsValue, args []js.JsValue) interface{} {
 		if !c.statusCallBack.IsUndefined() {
 			c.statusCallBack.Invoke(true)
 		}
-		sfc, err := sftp.NewClient(sshClient)
-		if err == nil {
-			c.sftp = sfc
+		if c.cretaeSftp {
+			sfc, err := sftp.NewClient(sshClient)
+			if err == nil {
+				c.sftp = sfc
+			}
 		}
 
 	}()
@@ -402,7 +399,9 @@ func RegisterSSHNewConnection() {
 }
 
 func SSHNewConnection(this js.JsValue, args []js.JsValue) interface{} {
-	c := SSHClient{}
+	c := SSHClient{
+		cretaeSftp: false,
+	}
 	if len(args) == 1 && args[0].Type().String() == "string" {
 		proxyUrl := args[0].String()
 		c.url = proxyUrl
@@ -419,6 +418,7 @@ func SSHNewConnection(this js.JsValue, args []js.JsValue) interface{} {
 	sshClient.Set("setCallback", js.JsFuncOf(c.jsSetCallback))
 	sshClient.Set("sessionInput", js.JsFuncOf(c.jsSessionInput))
 	sshClient.Set("sftClient", js.JsFuncOf(c.jsGetSFTClient))
+	sshClient.Set("createSftClient", js.JsFuncOf(c.jsCreateSFTClient))
 	return sshClient
 }
 
@@ -427,4 +427,9 @@ func (c *SSHClient) jsGetSFTClient(_ js.JsValue, args []js.JsValue) interface{} 
 		return NewSFTPClient(c.sftp)
 	}
 	return js.Global().Get("undefined")
+}
+
+func (c *SSHClient) jsCreateSFTClient(_ js.JsValue, args []js.JsValue) interface{} {
+	c.cretaeSftp = true
+	return nil
 }
