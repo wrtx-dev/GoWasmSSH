@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8" />
+	<link rel="icon"
+		type="image/svg+xml"
+		href="/term.svg" />
+	<meta name="viewport"
+		content="width=device-width, initial-scale=1.0" />
+	<meta name="color-scheme"
+		content="light dark" />
+	<title>GoWasmSSH</title>
+	<script src="wasm_exec.js"></script>
+	<script>
+		const go = new Go();
+		WebAssembly.instantiateStreaming(fetch("ssh.wasm"), go.importObject).then((result) => {
+			go.run(result.instance);
+		});
+		(async () => {
+			const resp = await fetch("/config.json");
+			let setProxy = false;
+			if (resp.ok) {
+				const config = await resp.json();
+				console.log("config", config);
+				if (config.proxy) {
+					// @ts-ignore
+					window.defaultProxy = config.proxy;
+					setProxy = true;
+				}
+			}
+			if (!setProxy) {
+				// @ts-ignore
+				window.defaultProxy = window.location.protocol === "https:" ? "wss://" + window.location.host + "/ws" : "ws://" + window.location.host + "/ws";
+			}
+			// @ts-ignore
+			console.log("defaultProxy", window.defaultProxy);
+		})();
+	</script>
+</head>
+
+<body>
+	<div id="app"></div>
+	<script type="module"
+		src="/src/index.jsx"></script>
+</body>
+
+</html>

@@ -1,0 +1,55 @@
+/* xterm.js滚动条修复 - 确保在Chrome和Safari中都能正常显示 */
+
+.xterm .xterm-viewport::-webkit-scrollbar {
+  width: 8px;
+  background-color: black;
+}
+
+.xterm .xterm-viewport::-webkit-scrollbar-track {
+  background-color: black;
+}
+
+.xterm .xterm-viewport::-webkit-scrollbar-thumb {
+  background-color: #e0e0e0;
+  border-radius: 2px;
+}
+
+.xterm .xterm-viewport::-webkit-scrollbar-thumb:hover {
+  background-color: #b9b9b9;
+}
+
+/* 添加标准滚动条样式以提高兼容性 */
+.xterm .xterm-viewport {
+  scrollbar-width: thin;
+  scrollbar-color: #e0e0e0 black;
+}
+
+/* 确保滚动条始终可见 */
+.xterm .xterm-viewport {
+  overflow-y: scroll !important;
+}
+
+/* 针对Firefox的滚动条样式 */
+@-moz-document url-prefix() {
+  .xterm .xterm-viewport {
+    scrollbar-width: thin;
+    scrollbar-color: #e0e0e0 black;
+  }
+}
+
+/* 确保xterm容器有正确的尺寸和溢出处理 */
+.xterm {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.xterm-screen {
+  width: 100%;
+  height: 100%;
+}
+
+.xterm-viewport {
+  width: 100% !important;
+  height: 100% !important;
+}
