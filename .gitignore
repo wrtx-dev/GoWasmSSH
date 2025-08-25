@@ -1,2 +1,4 @@
 ssh-page/public/wasm_exec.js
 ssh-page/public/ssh.wasm
+webpage/public/ssh.wasm
+webpage/public/wasm_exec.js
