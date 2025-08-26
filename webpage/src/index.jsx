@@ -2,15 +2,18 @@ import { render } from 'preact';
 
 import './style.css';
 import './xterm-fixes.css';
-import { useEffect, useRef, useState } from 'preact/hooks';
+import { useEffect, useId, useRef, useState } from 'preact/hooks';
 import { useXTerm } from './hooks/useTerm';
 import DirSvg from './assets/dir.svg';
 import SearchImg from "./assets/search.svg";
+import Down from "./assets/downfill.svg"
 import { useCallback } from 'react';
+
+const defaultProxy = window.location.protocol === "https:" ? "wss://" + window.location.host + "/ws" : "ws://" + window.location.host + "/ws";
 
 export function App() {
 	const ref = useRef(null);
-	const { term, fit } = useXTerm(ref);
+	const { term, fit, search } = useXTerm(ref);
 	const dialogRef = useRef(null);
 	const formRef = useRef(null);
 	const clientRef = useRef(null);
@@ -24,6 +27,9 @@ export function App() {
 	const confirmRef = useRef(null);
 	const [confirmInfo, setConfirmInfo] = useState(null);
 	const [connecedSftp, setConnectedSftp] = useState(false);
+	const [ignoreCase, setIgnoreCase] = useState(true);
+	const [fullWordMatch, setFullWordMatch] = useState(false);
+	const [findData, setFindData] = useState("");
 
 	const sftpItemClick = (file) => {
 		if (file.isDir && sftpRef && sftpRef.current) {
@@ -52,7 +58,10 @@ export function App() {
 		e.preventDefault();
 		const formData = new FormData(formRef.current);
 
-		const host = formData.get('host');
+		let host = formData.get('host');
+		if (host && host.toString().includes(':') && !host.toString().startsWith('[') && !host.toString().endsWith(']')) {
+			host = `[${host.toString()}]`;
+		}
 		const port = formData.get('port');
 		const username = formData.get('username');
 		const password = formData.get('password');
@@ -135,6 +144,7 @@ export function App() {
 			window.removeEventListener("resize", resize);
 		}
 	}, []);
+	const menuId = useId();
 	return (
 		<main className={"h-screen w-screen flex flex-col overflow-hidden border-none"} data-theme={"light"}>
 			<nav className={"navbar bg-primary text-primary-content shadow-sm"}>
@@ -143,18 +153,69 @@ export function App() {
 				</div>
 				<div className={"navbar-center "}>
 					<div
-						className={"grow join input rounded-sm text-black dark:text-white border-black focus-within:border-black focus-within:outline-0 focus-within:ring-0 items-center px-1"}
+						className={"grow join input rounded-sm text-black dark:text-white border-black focus-within:border-black focus-within:outline-0 focus-within:ring-0 items-center px-1 gap-0"}
 					>
 						<input
 							type="text"
 							className={"input join-item border-none focus-within:border-none focus-within:outline-0 focus-within:ring-0 px-1"}
 							placeholder={"Search"}
+							value={findData}
+							onChange={(e) => {
+								//@ts-ignore
+								setFindData(e.target.value);
+							}}
+
 						/>
 						<button
-							className={"join-item btn btn-success btn-square rounded-sm btn-sm"}
+							className={"join-item btn btn-success rounded-s-sm btn-sm"}
+							disabled={findData === "" || !connected}
+							onClick={() => {
+								if (search && search.current) {
+									search.current.findNext(findData, {
+										wholeWord: fullWordMatch,
+										caseSensitive: ignoreCase
+									})
+								}
+							}}
 						>
-							<img src={SearchImg} className={"w-4 h-4"} />
+							<p className={"select-none"}>查找</p><img src={SearchImg} className={"w-4 h-4"} />
 						</button>
+						<button
+							className={"join-item btn btn-success btn-square rounded-e-sm btn-sm"}
+							popoverTarget={menuId}
+							style={{ anchorName: "--anchor-1" }}
+						>
+							<img src={Down} className={"w-4 h-4"} />
+						</button>
+						<div
+							className={"dropdown dropdown-center menu w-52 rounded-box bg-base-100 shadow-sm flex flex-col items-start gap-1.5"}
+							popover="auto"
+							id={menuId}
+							style={{ positionAnchor: "--anchor-1" }}
+						>
+							<div className={"inline-flex flex-row gap-2 text-xs"}>
+								<input
+									type="checkbox"
+									className={"checkbox checkbox-sm checkbox-neutral"}
+									checked={ignoreCase}
+									onInput={() => {
+										setIgnoreCase(prev => !prev);
+									}}
+								/>
+								<label
+									className={"label"}>忽略大小写</label>
+							</div>
+							<div className={"inline-flex flex-row gap-2 text-xs"}>
+								<input
+									type="checkbox"
+									className={"checkbox checkbox-sm checkbox-neutral"}
+									checked={fullWordMatch}
+									onInput={() => {
+										setFullWordMatch(prev => !prev);
+									}} />
+								<label className={"label"}>全字匹配</label>
+							</div>
+						</div>
 					</div>
 				</div>
 				<div className={"navbar-end gap-1"}>
@@ -309,8 +370,7 @@ export function App() {
 							<input
 								className={"input join-item border-none focus-within:border-none focus-within:outline-0 focus-within:ring-0 px-1"}
 								name={"proxy"}
-								// @ts-ignore
-								defaultValue={window.defaultProxy}
+								defaultValue={defaultProxy}
 							/>
 						</div>
 

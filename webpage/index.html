@@ -17,25 +17,6 @@
 		WebAssembly.instantiateStreaming(fetch("ssh.wasm"), go.importObject).then((result) => {
 			go.run(result.instance);
 		});
-		(async () => {
-			const resp = await fetch("/config.json");
-			let setProxy = false;
-			if (resp.ok) {
-				const config = await resp.json();
-				console.log("config", config);
-				if (config.proxy) {
-					// @ts-ignore
-					window.defaultProxy = config.proxy;
-					setProxy = true;
-				}
-			}
-			if (!setProxy) {
-				// @ts-ignore
-				window.defaultProxy = window.location.protocol === "https:" ? "wss://" + window.location.host + "/ws" : "ws://" + window.location.host + "/ws";
-			}
-			// @ts-ignore
-			console.log("defaultProxy", window.defaultProxy);
-		})();
 	</script>
 </head>
 

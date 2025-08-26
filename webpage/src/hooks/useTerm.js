@@ -1,8 +1,12 @@
 import "@xterm/xterm/css/xterm.css";
 import { Terminal } from "@xterm/xterm";
 import { FitAddon } from "@xterm/addon-fit";
-import { WebglAddon } from "@xterm/addon-webgl"
+import { WebglAddon } from "@xterm/addon-webgl";
+import { SearchAddon } from "@xterm/addon-search";
+import { WebLinksAddon } from "@xterm/addon-web-links"
 import { useRef, useEffect } from "preact/hooks";
+
+
 const info = `
 这是一个基于WebAssembly (WASM) 技术开发的网页版SSH客户端。
 您可以使用它通过SSH协议，远程登录到您本地网络之外的任何机器。
@@ -13,6 +17,7 @@ const info = `
 export const useXTerm = (ref) => {
     const termRef = useRef(null);
     const fitRef = useRef(null);
+    const searchRef = useRef(null);
     useEffect(() => {
         const terminal = new Terminal({
             cursorBlink: true,
@@ -25,6 +30,11 @@ export const useXTerm = (ref) => {
         terminal.loadAddon(fitAddon);
         const webgl = new WebglAddon();
         terminal.loadAddon(webgl);
+        const linkAddon = new WebLinksAddon();
+        terminal.loadAddon(linkAddon);
+        const searchAddon = new SearchAddon();
+        terminal.loadAddon(searchAddon);
+        searchRef.current = searchAddon;
 
         fitRef.current = fitAddon;
         termRef.current = terminal;
@@ -36,6 +46,7 @@ export const useXTerm = (ref) => {
     return {
         term: termRef,
         fit: fitRef,
+        search: searchRef,
     };
 
 }
