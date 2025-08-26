@@ -28,7 +28,7 @@ honodev: client page
 deploycf: client page
 	@rm -rf cf-workers/public
 	@mkdir -v cf-workers/public
-	@cd cf-workers&&cp -rvf webpage/dist/* cf-workers/public/&&pnpm run deploy
+	@cd cf-workers&&cp -rvf ../webpage/dist/* public/&&pnpm run deploy
 
 serve: all
 	./gowasmssh

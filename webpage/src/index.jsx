@@ -134,8 +134,6 @@ export function App() {
 			if (clientRef && clientRef.current) {
 				clientRef.current.resize();
 			}
-
-
 		}
 	}
 	useEffect(() => {
@@ -513,7 +511,7 @@ export function App() {
 			</dialog>
 
 
-			<div className={"flex-1 flex flex-row grow bg-black"} ref={ref} />
+			<div className={"terminal-container bg-black"} ref={ref} />
 
 			<dialog className={"modal"} ref={msgboxRef}>
 				<div className={"modal-box"}>
