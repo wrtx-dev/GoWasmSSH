@@ -1,0 +1,43 @@
+name: deploy to workers
+
+on:
+    workflow_dispatch:
+        inputs:
+            commit_id:
+                description: "tag or branch or commit id(sha1 value)"
+                required: true
+                type: string
+                default: "master"
+
+jobs:
+    build:
+        name: deploy
+        runs-on: macos-latest
+        steps:
+            - name: Checkout source code
+              uses: actions/checkout@v3
+              with:
+                ref: ${{ github.ref }}
+                fetch-depth: 0
+            - name: Setup Node
+              uses: actions/setup-node@v3
+              with:
+                node-version: 22
+
+            - name: Install pnpm
+              shell: bash
+              run: npm i -g pnpm
+
+            - name: Setup Go
+              uses: actions/setup-go@v4
+              with:
+                go-version: '1.23'
+
+            - name: install deps
+              shell: bash
+              run: make deps
+
+            - name: make server
+              shell: bash
+              run: make server
+                
