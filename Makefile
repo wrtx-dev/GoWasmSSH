@@ -1,4 +1,4 @@
-.PHONY: client clean page server serve all help
+.PHONY: client clean page server serve all help cfdeps
 client: export GOOS=js
 client: export GOARCH=wasm
 
@@ -19,16 +19,16 @@ server: client page
 
 all: client page server
 
-honodev: client page
+cfdeps: page
 	@rm -rf cf-workers/public
 	@mkdir -v cf-workers/public
 	@cp -rvf webpage/dist/* cf-workers/public/
+	
+honodev: client page
 	@cd cf-workers&&pnpm run dev
 
-deploycf: client page
-	@rm -rf cf-workers/public
-	@mkdir -v cf-workers/public
-	@cd cf-workers&&cp -rvf ../webpage/dist/* public/&&pnpm run deploy
+deploycf: client page cfdeps
+	@cd cf-workers&&pnpm run deploy
 
 serve: all
 	./gowasmssh

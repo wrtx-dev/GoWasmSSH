@@ -7,7 +7,7 @@ on:
                 description: "tag or branch or commit id(sha1 value)"
                 required: true
                 type: string
-                default: "master"
+                default: "main"
 
 jobs:
     build:
@@ -37,7 +37,14 @@ jobs:
               shell: bash
               run: make deps
 
-            - name: make server
+            - name: prepare deploy files
               shell: bash
-              run: make server
+              run: make cfdeps
+
+            - name: deploy
+              uses: cloudflare/wrangler-action@v3
+              with:
+                apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+                accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+                workingDirectory: "cf-workers"
                 
